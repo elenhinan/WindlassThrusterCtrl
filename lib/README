@@ -1,0 +1,6 @@
+Requirements:
+* Adafruit_SSD1306
+* Adafruit-GFX-Library
+* LoRa (BSFrance version)
+* LowPower
+* Wire
