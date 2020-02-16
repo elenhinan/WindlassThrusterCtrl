@@ -4,6 +4,7 @@
 #include "config.h"
 #include "remote.h"
 #include "icons.h"
+#include "battery.h"
 
 enum InterfaceState : uint8_t {STATUS, THRUSTER, WINDLASS, WINDLASS_CALIBRATE, TURN_OFF, nInterfaceState};
 
@@ -31,6 +32,9 @@ class InterfaceClass {
         bool _menu_state;
         InterfaceState _state;
     public:
+        void _drawButtons();
+        void _drawBattery();
+        void _drawSignal();
         void _dispStatus();
         void _dispThruster();
         void _dispWindlass();
@@ -47,6 +51,7 @@ class InterfaceClass {
         void update();
         void display();
         unsigned long getIdle() { return millis() - _last_btn_timestamp; }
+        void resetIdle() { _last_btn_timestamp = millis(); }
 };
 
 extern InterfaceClass interface;

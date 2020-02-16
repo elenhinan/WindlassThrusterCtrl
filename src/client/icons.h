@@ -10,6 +10,7 @@
 #include "../icons/arrow_solid_up.xbm"
 #include "../icons/arrow_solid_down.xbm"
 #include "../icons/denied.xbm"
+#include "../icons/antenna.xbm"
 
 // since all arrows have same size
 #define ARROW_HEIGHT arrow_solid_left_height

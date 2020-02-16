@@ -10,12 +10,11 @@
 #include "tools.h"
 #include "remote.h"
 #include "interface.h"
+#include "battery.h"
 
 unsigned long lastTime = 0;            // last send time
-unsigned long lastInput = 0;
-char sendBuffer[64];
 
 void setup();
 void loop();
 void sleep();
-void wakeup();
+void wake();

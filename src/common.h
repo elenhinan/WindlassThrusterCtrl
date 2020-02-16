@@ -9,6 +9,18 @@
 #define LORA_BAND    868E6
 #define LORA_PABOOST false 
 
+// remote
+#define SIGNAL_MIN  -10
+#define SIGNAL_MAX  10
+#define SIGNAL_LOWPASS 0.25
+#define TX_INTERVAL 100
+#define TX_TIMEOUT 2.5 * TX_INTERVAL
+
+// battery
+#define BATTERY_VMAX 4.2
+#define BATTERY_VMIN 3.3
+#define BATTERY_CALIB 3.3 * 2 / 1024. //4.03 / 855
+
 // radio
 #define LORA_BOAT_ID            0x14
 #define LORA_CLIENT_ADR         0x55

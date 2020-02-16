@@ -19,6 +19,9 @@ class RemoteClass {
         bool _incomming_valid;
         unsigned long _incomming_timestamp;
         int _msg_id;
+        float _sig_min;
+        float _sig_max;
+        float _lowpass_signal;
 
         void _readPacket();
         void _writePacket();
@@ -34,6 +37,8 @@ class RemoteClass {
         void setDepth(float depth);
         float getDepth();
         float getSignal();
+        void setSignalRange(float sigmin, float sigmax) { _sig_min = sigmin; _sig_max = sigmax; }
+        float getSNR();
 };
 
 extern RemoteClass remote;

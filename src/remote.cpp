@@ -1,6 +1,10 @@
 #include "remote.h"
 
-RemoteClass::RemoteClass() {
+RemoteClass::RemoteClass() :
+    _sig_min(0),
+    _sig_max(0),
+    _lowpass_signal(0)
+{
     _outgoing.sender = 'T';
     _outgoing.msg_id = 0;
 }
@@ -14,9 +18,9 @@ void RemoteClass::begin() {
         while (true);                       // if failed, do nothing
     }
     LoRa.setSyncWord(LORA_BOAT_ID);
-    LoRa.setTxPower(10, false);
-    //LoRa.setSignalBandwidth(62.5)
-    //LoRa.setSpreadingFactor(10);
+    LoRa.setTxPower(7, 1);
+    LoRa.setSignalBandwidth(62.5E3);
+    LoRa.setCodingRate4(8);
     LoRa.enableCrc();
     //Serial.println("LoRa init succeeded.");
 }
@@ -29,6 +33,7 @@ void RemoteClass::_readPacket() {
             *pkg_ptr++ = (uint8_t)LoRa.read();
         }
         _outgoing.signal = LoRa.packetSnr();
+        _lowpass_signal = LoRa.packetSnr() * SIGNAL_LOWPASS + _lowpass_signal * (1 - SIGNAL_LOWPASS);
         _incomming_valid = true;
     } else {
         _incomming_valid = false;
@@ -77,7 +82,12 @@ float RemoteClass::getDepth() {
 }
 
 float RemoteClass::getSignal() {
-    return _incomming_valid ? _outgoing.signal : NAN;
+    return _incomming_valid ? LoRa.packetRssi() : NAN;
+}
+
+float RemoteClass::getSNR() {
+    float ratio = (_lowpass_signal - _sig_min) / (_sig_max - _sig_min);
+    return constrain(ratio,0.0,1.0);
 }
 
 RemoteClass remote;
