@@ -17,18 +17,17 @@
 // commands
 enum Move : int8_t
 {
-    DIR_STOP = 0,       // stop
-    DIR_POS = 1,        // move positive direction
-    DIR_NEG = -1,       // move negative direction
-    ERROR_DISABLED,     // motor is disabled
-    ERROR_COOL,         // motor is in cooldown
-    ERROR_LIMIT,        // motor at limit
-    SET_DEPTH,          // set depth of anchor, calculate new link_length factor
-    SET_ZERO,           // set anchor zero
-    NOOP,               // do nothing
-    UNKNOWN             // value unknown
+    DIR_STOP = 0,           // stop
+    DIR_POS = 1,            // move positive direction
+    DIR_NEG = -1,           // move negative direction
+    DIR_FORCE_POS = 2,      // move positive direction, ignore limit
+    DIR_FORCE_NEG = -2,     // move negative direction, ignore limit
+    NOOP = 8,               // do nothing
+    SET_DEPTH = 9,          // set depth of anchor, calculate new link_length factor
+    SET_ZERO = 10,          // set anchor zero
+    SET_MAX = 11,           // set anchor max
+    ERROR_DISABLED = 32,    // motor is disabled
+    ERROR_COOL = 33,        // motor is in cooldown
+    ERROR_LIMIT = 34,       // motor at limit
+    UNKNOWN = 64            // value unknown
 };
-
-Move hwinput(uint8_t btn_neg, uint8_t btn_pos) {
-    return (Move)(!digitalRead(btn_neg) - !digitalRead(btn_pos));
-}

@@ -6,9 +6,11 @@ class Windlass : public Motor{
         uint8_t _pin_chain_encA;
         uint8_t _pin_chain_encB;
         int16_t _chain_counter;
+        int16_t _chain_length;
         float _link_length;
         bool _chain_encA_prev;
         bool _chain_encB_prev;
+        bool _checkLimits(Move direction);
         void _output(Move direction);
         void _decodeQuadrature();
 
@@ -21,4 +23,5 @@ class Windlass : public Motor{
         void setChain(int16_t counts) { _chain_counter = counts; }
         float getLinkLength() { return _link_length; }
         void setLinkLength(float length) { _link_length = length; }
+        void setChainLength(float length) { _chain_length = length / _link_length; }
 };

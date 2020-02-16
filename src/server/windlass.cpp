@@ -42,19 +42,25 @@ void Windlass::_decodeQuadrature() {
         _dbg(msg);
     }
 
+    _checkLimits(_current_direction);
+}
+
+bool Windlass::_checkLimits(Move direction) {
     // abort movement if out of chain
-    if (decoded == 1 && _chain_counter <= 0 && _current_direction == DIR_POS) {
+    bool pos_endstop = _chain_counter <= 0 && direction == DIR_POS;
+    bool neg_endstop = _chain_counter >= _chain_length && direction == DIR_NEG;
+    if (pos_endstop || neg_endstop) {
         _dbg("Limit");
-        Motor::_output(DIR_STOP);
+        Motor::_output(ERROR_LIMIT);
+        return false;
+    } else {
+        return true;
     }
 }
 
 void Windlass::_output(Move direction) {
-    // do not allow to run past 0
-    if (_chain_counter <= 0 && direction == DIR_POS) {
-        _dbg("Limit");
-        Motor::_output(ERROR_LIMIT);
-    } else {
+    // do not allow to run past endstops
+    if (_checkLimits(direction)) {
         Motor::_output(direction);
     }
 }

@@ -12,7 +12,7 @@ typedef struct {
     Move windlass;
 } RemotePacket;
 
-class RemoteCtrl {
+class RemoteClass {
     private:
         RemotePacket _incomming;
         RemotePacket _outgoing;
@@ -23,7 +23,7 @@ class RemoteCtrl {
         void _readPacket();
         void _writePacket();
     public:
-        RemoteCtrl();
+        RemoteClass();
         void begin();
         bool recieve();
         bool transmit();
@@ -35,3 +35,5 @@ class RemoteCtrl {
         float getDepth();
         float getSignal();
 };
+
+extern RemoteClass remote;

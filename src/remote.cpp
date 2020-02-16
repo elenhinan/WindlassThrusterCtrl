@@ -1,25 +1,27 @@
 #include "remote.h"
 
-RemoteCtrl::RemoteCtrl() {
+RemoteClass::RemoteClass() {
     _outgoing.sender = 'T';
     _outgoing.msg_id = 0;
 }
 
-void RemoteCtrl::begin() {
-    Serial.println("LoRa Duplex");
+void RemoteClass::begin() {
+    //Serial.println("LoRa Duplex");
     LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);// set CS, reset, IRQ pin
     
-    if (!LoRa.begin(LORA_BAND, LORA_PABOOST)) {             // initialize ratio at 915 MHz
-        Serial.println("LoRa init failed. Check your connections.");
+    if (!LoRa.begin(LORA_BAND)) {             // initialize ratio at 915 MHz
+        //Serial.println("LoRa init failed. Check your connections.");
         while (true);                       // if failed, do nothing
     }
     LoRa.setSyncWord(LORA_BOAT_ID);
     LoRa.setTxPower(10, false);
+    //LoRa.setSignalBandwidth(62.5)
+    //LoRa.setSpreadingFactor(10);
     LoRa.enableCrc();
-    Serial.println("LoRa init succeeded.");
+    //Serial.println("LoRa init succeeded.");
 }
 
-void RemoteCtrl::_readPacket() {
+void RemoteClass::_readPacket() {
     uint8_t* pkg_ptr = (uint8_t*)&_incomming;
 
     if (LoRa.parsePacket() == sizeof(RemotePacket)) {
@@ -33,7 +35,7 @@ void RemoteCtrl::_readPacket() {
     }
 }
 
-void RemoteCtrl::_writePacket() {
+void RemoteClass::_writePacket() {
     uint8_t* pkg_ptr = (uint8_t*)&_outgoing;
     LoRa.beginPacket();
     LoRa.write(pkg_ptr, sizeof(RemotePacket));
@@ -41,39 +43,41 @@ void RemoteCtrl::_writePacket() {
     _outgoing.msg_id++;
 }
 
-bool RemoteCtrl::recieve() {
+bool RemoteClass::recieve() {
     _readPacket();
     return _incomming_valid;
 };
 
-bool RemoteCtrl::transmit() {
+bool RemoteClass::transmit() {
     _writePacket();
     return true;
 }
 
-void RemoteCtrl::setThruster(Move state) {
+void RemoteClass::setThruster(Move state) {
     _outgoing.thruster = state;
 }
 
-Move RemoteCtrl::getThruster() {
+Move RemoteClass::getThruster() {
     return _incomming_valid ? _incomming.thruster : UNKNOWN;
 }
 
-void RemoteCtrl::setWindlass(Move state) {
+void RemoteClass::setWindlass(Move state) {
     _outgoing.windlass = state;
 }
-Move RemoteCtrl::getWindlass() {
+Move RemoteClass::getWindlass() {
     return _incomming_valid ? _incomming.windlass : UNKNOWN;
 }
 
-void RemoteCtrl::setDepth(float depth) {
+void RemoteClass::setDepth(float depth) {
     _outgoing.depth = depth ;
 }
 
-float RemoteCtrl::getDepth() {
+float RemoteClass::getDepth() {
     return _incomming_valid ? _incomming.depth : NAN;
 }
 
-float RemoteCtrl::getSignal() {
-    return _incomming_valid ? _incomming.signal : NAN;
+float RemoteClass::getSignal() {
+    return _incomming_valid ? _outgoing.signal : NAN;
 }
+
+RemoteClass remote;
