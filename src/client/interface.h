@@ -6,7 +6,7 @@
 #include "icons.h"
 #include "battery.h"
 
-enum InterfaceState : uint8_t {STATUS, THRUSTER, WINDLASS, WINDLASS_CALIBRATE, TURN_OFF, nInterfaceState};
+enum InterfaceState : uint8_t {STATUS, THRUSTER, WINDLASS, WINDLASS_CALIBRATE, nInterfaceState};
 
 enum Buttons : uint8_t {
     BTN_NONE = 0,
@@ -29,24 +29,23 @@ class InterfaceClass {
         long signed _buttons_time;
         U8G2* _display;
         unsigned long _last_btn_timestamp;
-        bool _menu_state;
         InterfaceState _state;
-    public:
         void _drawButtons();
         void _drawBattery();
         void _drawSignal();
         void _dispStatus();
         void _dispThruster();
         void _dispWindlass();
-        void _dispWindlassZero();
         void _dispWindlassCalibrate();    
         bool _checkBtn(uint8_t btn_combo, long unsigned time);
         void _updateState();
+        void _printCommand(Move cmd);
 
     public:
         InterfaceClass();
         void setPins(uint8_t left, uint8_t right, uint8_t up, uint8_t down, uint8_t ok);
         void setDisplay(U8G2 *display) { _display = display; }
+        void setState(InterfaceState newstate) { _state = newstate; }
         bool begin();
         void update();
         void display();

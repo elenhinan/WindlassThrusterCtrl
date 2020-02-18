@@ -3,7 +3,11 @@
 Windlass::Windlass(const char* name, uint8_t pin_up_out, uint8_t pin_down_out, uint8_t pin_up_in, uint8_t pin_down_in, uint8_t pin_chain_encA, uint8_t pin_chain_encB) :
     Motor(name, pin_up_out, pin_down_out, pin_up_in, pin_down_in),
     _pin_chain_encA(pin_chain_encA),
-    _pin_chain_encB(pin_chain_encB)
+    _pin_chain_encB(pin_chain_encB),
+    _chain_counter(0),
+    _chain_length(50),
+    _link_length(0.1),
+    _force_move(false)
 {
 }
 
@@ -36,21 +40,17 @@ void Windlass::_decodeQuadrature() {
     _chain_encA_prev = chain_encA;
     _chain_encB_prev = chain_encB;
 
-    if(decoded != 0) {
-        char msg[8];
-        dtostrf(getDepth(), 3, 1, msg);
-        _dbg(msg);
-    }
-
     _checkLimits(_current_direction);
 }
 
 bool Windlass::_checkLimits(Move direction) {
     // abort movement if out of chain
+    if (_force_move) {
+        return true;
+    }
     bool pos_endstop = _chain_counter <= 0 && direction == DIR_POS;
     bool neg_endstop = _chain_counter >= _chain_length && direction == DIR_NEG;
     if (pos_endstop || neg_endstop) {
-        _dbg("Limit");
         Motor::_output(ERROR_LIMIT);
         return false;
     } else {
@@ -58,7 +58,22 @@ bool Windlass::_checkLimits(Move direction) {
     }
 }
 
+Move Windlass::_hwinput() {
+    // Hardware inputs overrule limits
+    return (Move)(!digitalRead(_pin_positive_in)*2 - !digitalRead(_pin_negative_in)*2);
+}
+
 void Windlass::_output(Move direction) {
+    if (direction == DIR_FORCE_POS) {
+        direction = DIR_POS;
+        _force_move = true;
+    }
+    else if (direction == DIR_FORCE_NEG) {
+        direction = DIR_NEG;
+        _force_move = true;
+    } else {
+        _force_move = false;
+    }
     // do not allow to run past endstops
     if (_checkLimits(direction)) {
         Motor::_output(direction);

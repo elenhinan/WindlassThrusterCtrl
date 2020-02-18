@@ -16,6 +16,7 @@ void setup() {
   battery.setPins(PIN_BAT_V);
   battery.setVoltages(BATTERY_VMIN, BATTERY_VMAX);
   battery.setCalibration(BATTERY_CALIB);
+  battery.begin();
 
   // init led
   pinMode(LED_BUILTIN, OUTPUT);
@@ -28,6 +29,7 @@ void setup() {
   interface.setPins(PIN_BTN_LEFT, PIN_BTN_RIGHT, PIN_BTN_UP, PIN_BTN_DOWN, PIN_BTN_OK);
   interface.setDisplay(&display);
   interface.begin();
+  interface.setState(STATUS);
 
   // done
   digitalWrite(LED_BUILTIN, LOW);
@@ -35,6 +37,7 @@ void setup() {
 
 void loop() {
   //unsigned long now = millis();
+  battery.update();
   interface.update();
 
   if (interface.getIdle() > AUTO_OFF) {
@@ -43,7 +46,7 @@ void loop() {
 
   if (remote.recieve()) {
     //interface._dispThruster();
-    interface._dispWindlass();
+    interface.display();
   }
 }
 
@@ -52,7 +55,8 @@ void sleep() {
   LoRa.sleep(); // set radio to sleep mode
   display.setPowerSave(1); // display off
   attachInterrupt(digitalPinToInterrupt(PIN_BTN_OK), wake, LOW); // enable interrupt on button
-  
+  SPI.end(); pinMode(MOSI, INPUT); pinMode(SCK, INPUT); // set SPI pins to high Z
+
   // enter sleep mode of MCU
   uint16_t cycles;
   const uint16_t cycles_min = BUTTON_WAKE / 100;
@@ -72,6 +76,7 @@ void sleep() {
 
   // start wake-up sequence
   detachInterrupt(digitalPinToInterrupt(PIN_BTN_OK)); // detach interrupt from button
+  pinMode(MOSI, OUTPUT); pinMode(SCK, OUTPUT); SPI.begin(); // restore SPI
   LoRa.idle(); // turn radio to idle when waking up
   display.setPowerSave(0); // display off
   interface.resetIdle();

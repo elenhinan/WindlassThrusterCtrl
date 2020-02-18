@@ -4,7 +4,6 @@
 #include "pins.h"
 #include "config.h"
 #include "common.h"
-#include "tools.h"
 #include "thruster.h"
 #include "windlass.h"
 #include "remote.h"

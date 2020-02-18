@@ -4,6 +4,10 @@
 #define BUTTON_PRESS            200 // ms a button must be pressed to register
 #define BUTTON_WAKE             2000 // ms to keep button pressed to wake from sleep
 
+// battery
+#define BATTERY_TS              1000 // sample battery every 1 seconds
+#define BATTERY_TC              60000 // 1 minute time constant for low pass filtering
+
 // display
 #define OLED_WIDTH 128 // OLED display width, in pixels
 #define OLED_HEIGHT 64 // OLED display height, in pixels

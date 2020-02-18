@@ -32,7 +32,7 @@ bool InterfaceClass::begin() {
     pinMode(_pin_btn_ok, INPUT_PULLUP);
 
 	resetIdle();
-	
+
 	return true;
 }
 
@@ -57,6 +57,8 @@ void InterfaceClass::update() {
 		_buttons_time = millis();
 		_buttons_prev = _buttons;
 	}
+
+	_updateState();
 }
 
 bool InterfaceClass::_checkBtn(uint8_t btn_combo, long unsigned time) {
@@ -69,10 +71,22 @@ bool InterfaceClass::_checkBtn(uint8_t btn_combo, long unsigned time) {
 }
 
 void InterfaceClass::_updateState() {
-	if (_checkBtn(BTN_OK, BUTTON_PRESS*4)) _menu_state = !_menu_state;
+
+	// ok + up = force_up
+	// ok + down = force_down
+	// ok hold 3 sec = switch
+	// ok hold 6 sec = menu
+	//		- zero (reset counter)
+	// 		- set max length (default current)
+	//		- calibrate length (enter measured)
+	//		- set cooldown thruster (0.1 seconds)
+	//		- set cooldown windlass (0.1 seconds)
+	//		- save settings
+	//		- debug display
+
 	switch(_state) {
 		case STATUS:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = TURN_OFF;
+			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = WINDLASS_CALIBRATE;
 			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = THRUSTER;
 			break;
 		case THRUSTER:
@@ -85,43 +99,61 @@ void InterfaceClass::_updateState() {
 			break;
 		case WINDLASS_CALIBRATE:
 			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = WINDLASS;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = TURN_OFF;
-			break;
-		case TURN_OFF:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = WINDLASS_CALIBRATE;
 			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = STATUS;
 			break;
 		default:
-			_menu_state = true;
 			_state = STATUS;
 			break;
 	}
+}
 
-	//remote.setWindlass(DIR_STOP);
-	//remote.setThruster(DIR_STOP);
-	//remote.setDepth(0);
-	//remote.transmit();
+void InterfaceClass::display() {
+	switch(_state) {
+		case STATUS: _dispStatus(); break;
+		case THRUSTER: _dispThruster(); break;
+		case WINDLASS: _dispWindlass(); break;
+		case WINDLASS_CALIBRATE: _dispWindlassCalibrate(); break;
+		default: break;
+	}
 }
 
 void InterfaceClass::_dispStatus() {
-	_display->setFont(u8g2_font_7x13B_tr);
-    _display->clearBuffer();
-    _display->setCursor(0,16);
-    _display->print("Thruster:");
-    _display->setCursor(0,32);
-    _display->print("Windlass:");
-    _display->setCursor(0,48);
-    _display->print("Depth:");
-    _display->setCursor(0,64);
-    _display->print("Signal:");
-    _display->setCursor(80,16);
-    _display->print(remote.getThruster());
-    _display->setCursor(80,32);
-    _display->print(remote.getWindlass());
-    _display->setCursor(80,48);
-    _display->print(remote.getDepth());
-    _display->setCursor(80,64);
-    _display->print(remote.getSignal());
+	_display->clearBuffer();
+	_display->setFontPosTop();
+	_display->setFont(u8g2_font_6x10_tr);
+
+    _display->setCursor(0,0);
+	_display->print(F("Thruster: "));
+    _printCommand(remote.getThruster());
+
+    _display->setCursor(0,10);
+	_display->print(F("Windlass: "));
+	_printCommand(remote.getWindlass());
+
+    _display->setCursor(0,20);
+	_display->print(F("Depth:    "));
+	_display->print(remote.getDepth(),1);
+	_display->print(F(" m"));
+
+    _display->setCursor(0,30);
+	_display->print(F("Signal:   "));
+	_display->print(remote.getSignal(),0);
+	_display->print(F(" dBm"));
+    
+    _display->setCursor(0,40);
+	_display->print(F("Battery:  "));
+	_display->print(battery.getVoltage(),2);
+	_display->print(F(" V"));
+
+    _display->setCursor(0,50);
+	_display->print(F("Buttons:  "));
+	_display->setFont(u8g2_font_open_iconic_all_1x_t);
+	if (_buttons & BTN_LEFT)  _display->write(74);
+	if (_buttons & BTN_RIGHT) _display->write(75);
+	if (_buttons & BTN_UP)    _display->write(76);
+	if (_buttons & BTN_DOWN)  _display->write(73);
+	if (_buttons & BTN_OK)    _display->write(115);
+
     _display->sendBuffer();
 }
 
@@ -147,10 +179,6 @@ void InterfaceClass::_drawBattery() {
 	_display->drawFrame(x, y, w, h);
 	_display->drawVLine(x+w, y+2, y+h-4);
 	_display->drawBox(x+2,y+2,min(bar, bar_max),h-4);
-	//_display->setFontPosTop();
-	//_display->setFont(u8g2_font_6x10_tn);
-	//_display->setCursor(x+w+2,y);
-	//_display->print(battery.getVoltage(),1);
 }
 
 void InterfaceClass::_drawSignal() {
@@ -167,10 +195,22 @@ void InterfaceClass::_drawSignal() {
 		uint8_t bar_h = (i+1)*2;
 		_display->drawBox(bar_x + 3*i, bar_y-bar_h, 2, bar_h);
 	}
-	//_display->setFontPosTop();
-	//_display->setFont(u8g2_font_6x10_tn);
-	//_display->setCursor(x,y+8);
-	//_display->print(remote.getSignal(),1);
+}
+
+void InterfaceClass::_printCommand(Move cmd) {
+	switch(cmd) {
+		case DIR_STOP:		_display->print(F("stop")); break;
+		case DIR_POS:
+		case DIR_FORCE_POS: _display->print(F("run +")); break;
+		case DIR_NEG:
+		case DIR_FORCE_NEG:	_display->print(F("run -")); break;
+		case NOOP:			_display->print(F("idle")); break;
+		case ERROR_DISABLED:_display->print(F("disabled")); break;
+		case ERROR_COOL:	_display->print(F("cooldown")); break;
+		case ERROR_LIMIT:	_display->print(F("limit")); break;
+		case UNKNOWN:
+		default:       		_display->print(F("--")); break;
+	}
 }
 
 void InterfaceClass::_dispThruster() {
@@ -179,8 +219,12 @@ void InterfaceClass::_dispThruster() {
 	_display->clearBuffer();
 	_drawBattery();
 	_drawSignal();
-	_drawButtons();
+	//_drawButtons();
+	
+	// draw icon
 	_display->drawXBMP(ICON_X-propeller_width/2, ICON_Y-propeller_height/2, propeller_width, propeller_height, propeller_bits);
+
+	// draw arrows
 	if (dir == DIR_NEG) {
 		_display->drawXBMP(ARROW_LEFT_X-ARROW_WIDTH/2, ARROW_LEFT_Y-ARROW_HEIGHT/2, ARROW_WIDTH, ARROW_HEIGHT, arrow_solid_left_bits);
 	} else {
@@ -194,6 +238,8 @@ void InterfaceClass::_dispThruster() {
 	if (dir == ERROR_LIMIT || dir == ERROR_COOL || dir == ERROR_DISABLED) {
 		_display->drawXBMP(THRUSTER_ARROW_X-denied_width/2, ARROW_Y-denied_height/2, denied_width, denied_height, denied_bits);
 	}
+
+	// display
 	_display->updateDisplay();
 }
 
@@ -203,7 +249,7 @@ void InterfaceClass::_dispWindlass() {
 	_display->clearBuffer();
 	_drawBattery();
 	_drawSignal();
-	_drawButtons();
+	//_drawButtons();
 
 	// draw icon
 	_display->drawXBMP(WINDLASS_ICON_X-anchor_width/2, ICON_Y-anchor_height/2, anchor_width, anchor_height, anchor_bits);
@@ -231,15 +277,15 @@ void InterfaceClass::_dispWindlass() {
     _display->print(depth, (depth<100 && depth>-10) ? 1:0);
 
 	// display
-	_display->updateDisplay();
-}
-
-void InterfaceClass::_dispWindlassZero() {
-
+	_display->updateDisplay(); 
 }
 
 void InterfaceClass::_dispWindlassCalibrate() {
-
+	_display->clearBuffer();
+	_drawBattery();
+	_drawSignal();
+	_drawButtons();
+	_display->updateDisplay();
 }
 
 InterfaceClass interface;

@@ -12,23 +12,12 @@ Motor::Motor(const char* name, uint8_t pin_positive_out, uint8_t pin_negative_ou
     _cooldown_direction(DIR_STOP),
     _last_input_direction(DIR_STOP),
     _cooldown_timestamp(0),
-    _last_timestamp(0),
-    _debug(false)
+    _last_timestamp(0)
 {
     strcpy(_name, name);
 }
 
-void Motor::_dbg(const char* msg) {
-    if(_debug) {
-        Serial.print(_name);
-        Serial.print(": ");
-        Serial.println(msg);
-    }
-}
-
 bool Motor::begin() {
-    _dbg("Init");
-
     // ensure outputs are low
     digitalWrite(_pin_positive_out, LOW);
     digitalWrite(_pin_negative_out, LOW);
@@ -59,11 +48,9 @@ void Motor::_output(Move new_direction) {
 
     // if reversal within cooldown, then stop thruster
     if (!_enabled) {
-        _dbg("Disabled");
         _current_direction = ERROR_DISABLED;
     }
     else if ((new_direction == -_cooldown_direction) && (now < _cooldown_timestamp + _cooldown)) {
-        _dbg("Cooldown");
         _current_direction = ERROR_COOL;
     }
     else {
@@ -78,10 +65,8 @@ void Motor::_output(Move new_direction) {
     if (_current_direction == DIR_POS || _current_direction == DIR_NEG) {
         _cooldown_timestamp = now;
         _cooldown_direction = _current_direction;
-        _dbg(_current_direction == DIR_POS ? "Run+" : "Run-");
     }
     else if (_current_direction == DIR_STOP) {
-        _dbg("Stop");
     }
 
     // update timestamp

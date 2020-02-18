@@ -18,9 +18,7 @@ class Motor {
         unsigned long _cooldown_timestamp;
         unsigned long _last_timestamp;
         int16_t _chain_counter;
-        bool _debug;
-        void _dbg(const char* msg);
-        Move _hwinput();
+        virtual Move _hwinput();
         virtual void _output(Move direction);
 
     public:
@@ -30,7 +28,6 @@ class Motor {
         void update();
         bool enable();
         void disable();
-        void debug(bool mode) { _debug = mode ;}
         void setTimeout(unsigned long timeout) { _timeout = timeout; }
         void setCooldown(unsigned long cooldown) { _cooldown = cooldown; }
         Move getState() { return _current_direction; }

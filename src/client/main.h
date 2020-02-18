@@ -7,7 +7,6 @@
 #include "pins.h"
 #include "config.h"
 #include "common.h"
-#include "tools.h"
 #include "remote.h"
 #include "interface.h"
 #include "battery.h"

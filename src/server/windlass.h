@@ -10,9 +10,11 @@ class Windlass : public Motor{
         float _link_length;
         bool _chain_encA_prev;
         bool _chain_encB_prev;
+        bool _force_move;
         bool _checkLimits(Move direction);
         void _output(Move direction);
         void _decodeQuadrature();
+        Move _hwinput();
 
     public:
         Windlass(const char* name, uint8_t pin_up_out, uint8_t pin_down_out, uint8_t pin_up_in, uint8_t pin_down_in, uint8_t pin_chain_encA, uint8_t pin_chain_encB);
