@@ -7,10 +7,11 @@
 #include "pins.h"
 #include "config.h"
 #include "common.h"
-#include "remote.h"
+#include "radio.h"
 #include "interface.h"
 #include "battery.h"
 
+unsigned long last_refresh = 0;
 unsigned long lastTime = 0;            // last send time
 
 void setup();

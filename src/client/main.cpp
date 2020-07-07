@@ -3,7 +3,7 @@
 U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI display(U8G2_R0, PIN_OLED_CS, PIN_OLED_DC, PIN_OLED_RST);
 
 void setup() {
-  delay(1000);
+  delay(2000);
 
   //Serial.begin(9600);
 
@@ -23,8 +23,8 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 
   // init radio
-  remote.setSignalRange(SIGNAL_MIN, SIGNAL_MAX);
-  remote.begin();
+  radio.setSignalRange(SIGNAL_MIN, SIGNAL_MAX);
+  radio.begin();
 
   interface.setPins(PIN_BTN_LEFT, PIN_BTN_RIGHT, PIN_BTN_UP, PIN_BTN_DOWN, PIN_BTN_OK);
   interface.setDisplay(&display);
@@ -36,25 +36,27 @@ void setup() {
 }
 
 void loop() {
-  //unsigned long now = millis();
+  unsigned long now = millis();
   battery.update();
   interface.update();
+  radio.recieve();
 
   if (interface.getIdle() > AUTO_OFF) {
     sleep();
   }
 
-  if (remote.recieve()) {
-    //interface._dispThruster();
+  if (now - last_refresh > REFRESH_INTERVAL) {
     interface.display();
+    last_refresh = now;
   }
+  radio.transmit();
 }
 
 void sleep() {
   // start sleep sequence
   LoRa.sleep(); // set radio to sleep mode
   display.setPowerSave(1); // display off
-  attachInterrupt(digitalPinToInterrupt(PIN_BTN_OK), wake, LOW); // enable interrupt on button
+  attachInterrupt(digitalPinToInterrupt(PIN_ON_BUTTON), wake, LOW); // enable interrupt on button
   SPI.end(); pinMode(MOSI, INPUT); pinMode(SCK, INPUT); // set SPI pins to high Z
 
   // enter sleep mode of MCU
@@ -67,7 +69,7 @@ void sleep() {
     // on waking, count time button is pressed
     digitalWrite(LED_BUILTIN, HIGH); // positive indicator of life
     cycles = 0;
-    while(!digitalRead(PIN_BTN_OK)) {
+    while(!digitalRead(PIN_ON_BUTTON)) {
       cycles++;
       delay(100);
     }
@@ -75,7 +77,7 @@ void sleep() {
   } while (cycles < cycles_min); // go back to sleep if button not long-pressed
 
   // start wake-up sequence
-  detachInterrupt(digitalPinToInterrupt(PIN_BTN_OK)); // detach interrupt from button
+  detachInterrupt(digitalPinToInterrupt(PIN_ON_BUTTON)); // detach interrupt from button
   pinMode(MOSI, OUTPUT); pinMode(SCK, OUTPUT); SPI.begin(); // restore SPI
   LoRa.idle(); // turn radio to idle when waking up
   display.setPowerSave(0); // display off

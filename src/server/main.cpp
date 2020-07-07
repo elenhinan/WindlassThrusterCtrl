@@ -30,8 +30,8 @@ void setup() {
   }
   windlass.enable();
 
-  // setup remote control
-  remote.begin();
+  // setup radio control
+  radio.begin();
 
   // done
   digitalWrite(LED_BUILTIN, LOW);
@@ -41,24 +41,33 @@ bool led = true;
 
 void loop() {
   unsigned long now = millis();
+  
+  radio.recieve();
 
-  // check manual inputs
-  thruster.update();
-  windlass.update();
+  // update outputs
+  if (now - last_update > HW_INTERVAL) {
 
-  if (now - lastTime > INTERVAL) {
-    digitalWrite(LED_BUILTIN, led);
-    led = !led;
+    // if any radio commands recieved, pass them on
+    //if (wifi.recieve()) {
+    //  thruster.input(wifi.getThruster());
+    //  windlass.input(wifi.getWindlass());
+    //}
+    thruster.input(radio.getThruster());
+    windlass.input(radio.getWindlass());
 
-    //remote.recieve();
-    //thruster.input(remote.getThruster());
-    //windlass.input(remote.getWindlass());
+    // update thruster and windlass outputs
+    thruster.update();
+    windlass.update();
 
-    remote.setThruster(thruster.getState());
-    remote.setWindlass(windlass.getState());
-    remote.setDepth(windlass.getDepth());
-    remote.transmit();
+    radio.setThruster(thruster.getState());
+    radio.setWindlass(windlass.getState());
+    radio.setDepth(windlass.getDepth());
 
-    lastTime = now;            // timestamp the message
+
+    last_update = now;            // timestamp the message
   }
+
+  // transmit if needed
+  bool tx = radio.transmit();
+  digitalWrite(LED_BUILTIN, tx);
 }

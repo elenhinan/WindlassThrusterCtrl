@@ -37,6 +37,8 @@ bool InterfaceClass::begin() {
 }
 
 void InterfaceClass::update() {
+	unsigned long now = millis();
+
 	_buttons = 0;
 	_buttons |= digitalRead(_pin_btn_left)  ? 0 : BTN_LEFT;
 	_buttons |= digitalRead(_pin_btn_right) ? 0 : BTN_RIGHT;
@@ -46,7 +48,7 @@ void InterfaceClass::update() {
 	
 	// if any keypress registered
 	if (_buttons != BTN_NONE) {
-		_last_btn_timestamp = millis();
+		_last_btn_timestamp = now;
 		digitalWrite(LED_BUILTIN, HIGH);
 	} else {
 		digitalWrite(LED_BUILTIN, LOW);
@@ -54,16 +56,18 @@ void InterfaceClass::update() {
 
 	// check for change, and reset timestamp if there is
 	if (_buttons != _buttons_prev) {
-		_buttons_time = millis();
+		_buttons_time = now;
 		_buttons_prev = _buttons;
 	}
 
+	//
 	_updateState();
 }
 
 bool InterfaceClass::_checkBtn(uint8_t btn_combo, long unsigned time) {
-	if ((btn_combo == _buttons) && (millis() - _buttons_time > time)) {
-		_buttons_time = millis(); // reset timer if button registered
+	unsigned long now = millis();
+	if ((btn_combo == _buttons) && (now - _buttons_time > time)) {
+		_buttons_time = now; // reset timer if button registered
 		return true;
 	} else {
 		return false;
@@ -86,21 +90,26 @@ void InterfaceClass::_updateState() {
 
 	switch(_state) {
 		case STATUS:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = WINDLASS_CALIBRATE;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = THRUSTER;
+			if (_checkBtn(BTN_OK, BUTTON_LONGPRESS)) _state = THRUSTER;
 			break;
 		case THRUSTER:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = STATUS;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = WINDLASS;
+			if (_checkBtn(BTN_OK, BUTTON_LONGPRESS)) _state = WINDLASS;
+			else if (_checkBtn(BTN_RIGHT, BUTTON_SHORTPRESS)) radio.setThruster(DIR_POS);
+			else if (_checkBtn(BTN_LEFT, BUTTON_SHORTPRESS)) radio.setThruster(DIR_NEG);
+			else radio.setThruster(DIR_STOP);
 			break;
 		case WINDLASS:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = THRUSTER;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = WINDLASS_CALIBRATE;
+			if (_checkBtn(BTN_OK, BUTTON_LONGPRESS)) _state = STATUS;
+			else if (_checkBtn(BTN_UP, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_POS);
+			else if (_checkBtn(BTN_DOWN, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_NEG);
+			else if (_checkBtn(BTN_UP | BTN_OK, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_FORCE_POS);
+			else if (_checkBtn(BTN_DOWN | BTN_OK, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_FORCE_NEG);
+			else radio.setWindlass(DIR_STOP);
 			break;
-		case WINDLASS_CALIBRATE:
-			if (_checkBtn(BTN_LEFT, BUTTON_PRESS)) _state = WINDLASS;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = STATUS;
-			break;
+//		case WINDLASS_CALIBRATE:
+//			if (_checkBtn(BTN_LEFT, BUTTON_LONGPRESS)) _state = WINDLASS;
+//			else if (_checkBtn(BTN_RIGHT, BUTTON_PRESS)) _state = STATUS;
+//			break;
 		default:
 			_state = STATUS;
 			break;
@@ -124,20 +133,20 @@ void InterfaceClass::_dispStatus() {
 
     _display->setCursor(0,0);
 	_display->print(F("Thruster: "));
-    _printCommand(remote.getThruster());
+    _printCommand(radio.getThruster());
 
     _display->setCursor(0,10);
 	_display->print(F("Windlass: "));
-	_printCommand(remote.getWindlass());
+	_printCommand(radio.getWindlass());
 
     _display->setCursor(0,20);
 	_display->print(F("Depth:    "));
-	_display->print(remote.getDepth(),1);
+	_display->print(radio.getDepth(),1);
 	_display->print(F(" m"));
 
     _display->setCursor(0,30);
 	_display->print(F("Signal:   "));
-	_display->print(remote.getSignal(),0);
+	_display->print(radio.getSignal(),0);
 	_display->print(F(" dBm"));
     
     _display->setCursor(0,40);
@@ -188,7 +197,7 @@ void InterfaceClass::_drawSignal() {
 	const uint8_t bar_x = x + antenna_width + 2;
 	const uint8_t n_bars = 4;
 
-	uint8_t bar = constrain(remote.getSNR() * n_bars+1,0,n_bars);
+	uint8_t bar = constrain(radio.getSNR() * n_bars+1,0,n_bars);
 
 	_display->drawXBMP(x, y, antenna_width, antenna_height, antenna_bits);
 	for (uint8_t i=0; i<bar; i++) {
@@ -214,7 +223,7 @@ void InterfaceClass::_printCommand(Move cmd) {
 }
 
 void InterfaceClass::_dispThruster() {
-	Move dir = remote.getThruster();
+	Move dir = radio.getThruster();
 
 	_display->clearBuffer();
 	_drawBattery();
@@ -244,7 +253,7 @@ void InterfaceClass::_dispThruster() {
 }
 
 void InterfaceClass::_dispWindlass() {
-	Move dir = remote.getWindlass();
+	Move dir = radio.getWindlass();
 
 	_display->clearBuffer();
 	_drawBattery();
@@ -273,7 +282,7 @@ void InterfaceClass::_dispWindlass() {
 	_display->setFontPosCenter();
 	_display->setFont(u8g2_font_fub25_tn);
 	_display->setCursor(WINDLASS_DEPTH_X,WINDLASS_DEPTH_Y);
-	float depth = remote.getDepth();
+	float depth = radio.getDepth();
     _display->print(depth, (depth<100 && depth>-10) ? 1:0);
 
 	// display

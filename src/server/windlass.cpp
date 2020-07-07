@@ -59,7 +59,6 @@ bool Windlass::_checkLimits(Move direction) {
 }
 
 Move Windlass::_hwinput() {
-    // Hardware inputs overrule limits
     return (Move)(!digitalRead(_pin_positive_in)*2 - !digitalRead(_pin_negative_in)*2);
 }
 

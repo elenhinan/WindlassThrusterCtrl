@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <u8g2lib.h>
 #include "config.h"
-#include "remote.h"
+#include "radio.h"
 #include "icons.h"
 #include "battery.h"
 

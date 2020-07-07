@@ -10,26 +10,28 @@ typedef struct {
     float depth;
     Move thruster;
     Move windlass;
-} RemotePacket;
+} RadioPacket;
 
-class RemoteClass {
+class RadioClass {
     private:
-        RemotePacket _incomming;
-        RemotePacket _outgoing;
+        RadioPacket _incomming;
+        RadioPacket _outgoing;
+        bool _changed;
         bool _incomming_valid;
         unsigned long _incomming_timestamp;
+        unsigned long _outgoing_timestamp;
         int _msg_id;
         float _sig_min;
         float _sig_max;
         float _lowpass_signal;
-
         void _readPacket();
         void _writePacket();
     public:
-        RemoteClass();
+        RadioClass();
         void begin();
         bool recieve();
         bool transmit();
+        bool isValid();
         void setThruster(Move state);
         Move getThruster();
         void setWindlass(Move state);
@@ -41,4 +43,4 @@ class RemoteClass {
         float getSNR();
 };
 
-extern RemoteClass remote;
+extern RadioClass radio;

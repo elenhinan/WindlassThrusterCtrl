@@ -6,9 +6,9 @@
 #include "common.h"
 #include "thruster.h"
 #include "windlass.h"
-#include "remote.h"
+#include "radio.h"
 
-unsigned long lastTime = 0;            // last send time
+unsigned long last_update = 0;            // last update time
 char sendBuffer[64];
 
 void setup();

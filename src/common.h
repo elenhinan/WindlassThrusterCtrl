@@ -13,8 +13,9 @@
 #define SIGNAL_MIN  -10
 #define SIGNAL_MAX  10
 #define SIGNAL_LOWPASS 0.25
-#define TX_INTERVAL 100
-#define TX_TIMEOUT 2.5 * TX_INTERVAL
+#define RF_MIN_INTERVAL 200
+#define RF_MAX_INTERVAL 500
+#define RF_TIMEOUT (5 * RF_MAX_INTERVAL)
 
 // battery
 #define BATTERY_VMAX 4.2
@@ -29,12 +30,12 @@
 // commands
 enum Move : int8_t
 {
-    DIR_STOP = 0,           // stop
+    DIR_STOP = 4,           // stop
     DIR_POS = 1,            // move positive direction
     DIR_NEG = -1,           // move negative direction
     DIR_FORCE_POS = 2,      // move positive direction, ignore limit
     DIR_FORCE_NEG = -2,     // move negative direction, ignore limit
-    NOOP = 8,               // do nothing
+    NOOP = 0,               // do nothing
     SET_DEPTH = 9,          // set depth of anchor, calculate new link_length factor
     SET_ZERO = 10,          // set anchor zero
     SET_MAX = 11,           // set anchor max

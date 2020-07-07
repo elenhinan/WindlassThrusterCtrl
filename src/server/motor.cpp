@@ -11,6 +11,7 @@ Motor::Motor(const char* name, uint8_t pin_positive_out, uint8_t pin_negative_ou
     _current_direction(DIR_STOP),
     _cooldown_direction(DIR_STOP),
     _last_input_direction(DIR_STOP),
+    _new_direction(DIR_STOP),
     _cooldown_timestamp(0),
     _last_timestamp(0)
 {
@@ -46,7 +47,7 @@ void Motor::disable() {
 void Motor::_output(Move new_direction) {
     unsigned long now = millis();
 
-    // if reversal within cooldown, then stop thruster
+    // if reversal within cooldown, then stop motor
     if (!_enabled) {
         _current_direction = ERROR_DISABLED;
     }
@@ -74,9 +75,9 @@ void Motor::_output(Move new_direction) {
 }
 
 void Motor::input(Move direction) {
-    // if valid command and no direct input is applied: pass cmd onto output stage
-    if (direction >= -1 && direction <= 1 && _hwinput() == DIR_STOP) {
-        _output(direction);
+    // if valid command, overwrite previous
+    if ( (direction >= DIR_FORCE_NEG && direction <= DIR_FORCE_POS && direction != NOOP) || direction == DIR_STOP) {
+        _new_direction = direction;
     }
 }
 
@@ -92,16 +93,10 @@ void Motor::update() {
         _last_input_direction = _current_direction = DIR_STOP;
     }
 
-    // read joystick input
-    Move input_direction = _hwinput();
-    if (input_direction != _last_input_direction) {
-        _output(input_direction);
+    input(_hwinput()); // apply joystick input
+    if (_new_direction != _last_input_direction) {
+        _output(_new_direction);
     }
-    _last_input_direction = input_direction;
-
-    // if no new (radio) command recieved within timeout, stop thruster
-    //if ((_current_direction != DIR_STOP) && now > _last_timestamp + _timeout) {
-    //    if(_debug) Serial.println("Timeout, aborting");
-    //    _output(DIR_STOP);
-    //}
+    _last_input_direction = _new_direction;
+    _new_direction = DIR_STOP; // reset new direction for each update
 }

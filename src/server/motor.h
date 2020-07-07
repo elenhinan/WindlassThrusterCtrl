@@ -15,6 +15,7 @@ class Motor {
         Move _current_direction;
         Move _cooldown_direction;
         Move _last_input_direction;
+        Move _new_direction;
         unsigned long _cooldown_timestamp;
         unsigned long _last_timestamp;
         int16_t _chain_counter;
