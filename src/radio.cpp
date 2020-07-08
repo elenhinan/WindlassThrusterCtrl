@@ -23,8 +23,8 @@ void RadioClass::begin() {
     }
     LoRa.setSyncWord(LORA_BOAT_ID);
     LoRa.setTxPower(7, 1);
-    LoRa.setSignalBandwidth(62.5E3);
-    LoRa.setCodingRate4(8);
+    LoRa.setSignalBandwidth(125E3);
+    LoRa.setCodingRate4(7);
     LoRa.enableCrc();
     //Serial.println("LoRa init succeeded.");
 }
@@ -57,7 +57,7 @@ void RadioClass::_writePacket() {
     uint8_t* pkg_ptr = (uint8_t*)&_outgoing;
     LoRa.beginPacket();
     LoRa.write(pkg_ptr, sizeof(RadioPacket));
-    LoRa.endPacket();
+    LoRa.endPacket(true); // true = non blocking mode
     _outgoing.msg_id++;
 }
 

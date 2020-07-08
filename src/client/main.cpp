@@ -13,7 +13,7 @@ void setup() {
   }
 
   // setup battery
-  battery.setPins(PIN_BAT_V);
+  battery.setPins(PIN_BAT_V, PIN_BAT_CHG);
   battery.setVoltages(BATTERY_VMIN, BATTERY_VMAX);
   battery.setCalibration(BATTERY_CALIB);
   battery.begin();
@@ -36,20 +36,22 @@ void setup() {
 }
 
 void loop() {
+
+  // make button commands interrupt driven on timer
   unsigned long now = millis();
   battery.update();
   interface.update();
-  radio.recieve();
+  bool rx = radio.recieve();
+  radio.transmit();
 
   if (interface.getIdle() > AUTO_OFF) {
     sleep();
   }
 
-  if (now - last_refresh > REFRESH_INTERVAL) {
+  if (rx || now - last_refresh > MIN_REFRESH_INTERVAL) {
     interface.display();
     last_refresh = now;
   }
-  radio.transmit();
 }
 
 void sleep() {

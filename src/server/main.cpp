@@ -6,6 +6,10 @@ Windlass windlass("Windlass", WL_PIN_UP_OUT, WL_PIN_DOWN_OUT, WL_PIN_UP_IN, WL_P
 void setup() {
   delay(2000);
 
+  //#ifdef DEBUG
+  //Serial.begin(9600);
+  //#endif
+
   // init led
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -62,7 +66,6 @@ void loop() {
     radio.setThruster(thruster.getState());
     radio.setWindlass(windlass.getState());
     radio.setDepth(windlass.getDepth());
-
 
     last_update = now;            // timestamp the message
   }

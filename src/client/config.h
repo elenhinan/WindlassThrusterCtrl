@@ -1,5 +1,5 @@
 // settings
-#define REFRESH_INTERVAL        1000
+#define MIN_REFRESH_INTERVAL    1000
 #define AUTO_OFF                300000
 #define BUTTON_SHORTPRESS       50 // ms a button must be pressed to register
 #define BUTTON_PRESS            200 // ms a button must be pressed to register

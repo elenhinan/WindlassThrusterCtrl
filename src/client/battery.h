@@ -5,6 +5,7 @@
 class BatteryInfoClass {
     private:
         uint8_t _pin_vbat;
+        uint8_t _pin_bat_mon;
         float _vmin;
         float _vmax;
         float _adcfactor;
@@ -15,7 +16,7 @@ class BatteryInfoClass {
         BatteryInfoClass();
         void begin();
         void update();
-        void setPins(uint8_t vbat) { _pin_vbat = vbat; }
+        void setPins(uint8_t vbat, uint8_t bat_chg_en) { _pin_vbat = vbat; _pin_bat_mon = bat_chg_en; }
         void setVoltages(float vmin, float vmax) { _vmin = vmin; _vmax = vmax; }
         void setCalibration(float factor) { _adcfactor = factor; }
         float getVoltage();
