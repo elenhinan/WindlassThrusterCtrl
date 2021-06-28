@@ -28,6 +28,7 @@ class InterfaceClass {
         uint8_t _buttons_prev;
         long signed _buttons_time;
         U8G2* _display;
+        unsigned long _last_refresh;
         unsigned long _last_btn_timestamp;
         InterfaceState _state;
         void _drawButtons();
@@ -37,7 +38,7 @@ class InterfaceClass {
         void _dispThruster();
         void _dispWindlass();
         void _dispWindlassCalibrate();    
-        bool _checkBtn(uint8_t btn_combo, long unsigned time);
+        bool _checkBtn(uint8_t btn_combo, long unsigned time, bool hold=false);
         void _updateState();
         void _printCommand(Move cmd);
 
@@ -48,7 +49,7 @@ class InterfaceClass {
         void setState(InterfaceState newstate) { _state = newstate; }
         bool begin();
         void update();
-        void display();
+        void display(bool force=false);
         unsigned long getIdle() { return millis() - _last_btn_timestamp; }
         void resetIdle() { _last_btn_timestamp = millis(); }
 };

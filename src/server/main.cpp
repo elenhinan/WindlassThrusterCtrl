@@ -6,9 +6,9 @@ Windlass windlass("Windlass", WL_PIN_UP_OUT, WL_PIN_DOWN_OUT, WL_PIN_UP_IN, WL_P
 void setup() {
   delay(2000);
 
-  //#ifdef DEBUG
-  //Serial.begin(9600);
-  //#endif
+  #ifdef DEBUG
+  Serial.begin(9600);
+  #endif
 
   // init led
   pinMode(LED_BUILTIN, OUTPUT);
@@ -27,8 +27,8 @@ void setup() {
   //windlass.debug(true);
   windlass.setCooldown(WL_COOLDOWN);
   windlass.setTimeout(WL_TIMEOUT);
-  windlass.setLinkLength(0.1); // 10 cm per pulse
-  windlass.setChainLength(50.0); // 50 meter chain
+  windlass.setMeterPerPulse(CHAIN_PITCH*GYPSY_LINKS);
+  windlass.setChainLength(CHAIN_LENGTH);
   if(!windlass.begin()) {
     while (true);                       // if failed, do nothing
   }
@@ -41,12 +41,15 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-bool led = true;
-
 void loop() {
   unsigned long now = millis();
   
-  radio.recieve();
+  bool rx = radio.recieve();
+  if (radio.isValid()) {
+    analogWrite(LED_BUILTIN, led_power--);
+  } else {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 
   // update outputs
   if (now - last_update > HW_INTERVAL) {
@@ -65,12 +68,13 @@ void loop() {
 
     radio.setThruster(thruster.getState());
     radio.setWindlass(windlass.getState());
-    radio.setDepth(windlass.getDepth());
+    radio.setDepth(windlass.getChain());
 
     last_update = now;            // timestamp the message
   }
 
-  // transmit if needed
-  bool tx = radio.transmit();
-  digitalWrite(LED_BUILTIN, tx);
+  // reply to rf
+  if (rx) {
+    radio.transmit(true);
+  }
 }

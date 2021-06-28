@@ -9,7 +9,9 @@
 #include "radio.h"
 
 unsigned long last_update = 0;            // last update time
+
 char sendBuffer[64];
+int led_power=0;
 
 void setup();
 void loop();

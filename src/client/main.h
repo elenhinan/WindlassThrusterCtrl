@@ -11,9 +11,6 @@
 #include "interface.h"
 #include "battery.h"
 
-unsigned long last_refresh = 0;
-unsigned long lastTime = 0;            // last send time
-
 void setup();
 void loop();
 void sleep();

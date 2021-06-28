@@ -18,7 +18,6 @@ class Motor {
         Move _new_direction;
         unsigned long _cooldown_timestamp;
         unsigned long _last_timestamp;
-        int16_t _chain_counter;
         virtual Move _hwinput();
         virtual void _output(Move direction);
 

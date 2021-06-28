@@ -5,6 +5,7 @@
 #define PIN_BTN_DOWN                3
 #define PIN_BTN_OK                  5
 #define PIN_BAT_V                   A9
+#define PIN_BAT_CHG                 PB0
 
 #define PIN_OLED_CS                 A3
 #define PIN_OLED_DC                 A4

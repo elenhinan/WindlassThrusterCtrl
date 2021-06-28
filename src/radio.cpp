@@ -2,11 +2,9 @@
 
 RadioClass::RadioClass() :
     _changed(true),
-    _incomming_valid(false),
+    _incomming_updated(false),
     _incomming_timestamp(0),
     _outgoing_timestamp(0),
-    _sig_min(0),
-    _sig_max(0),
     _lowpass_signal(0)
 {
     _outgoing.sender = 'T';
@@ -22,8 +20,10 @@ void RadioClass::begin() {
         while (true);                       // if failed, do nothing
     }
     LoRa.setSyncWord(LORA_BOAT_ID);
-    LoRa.setTxPower(7, 1);
-    LoRa.setSignalBandwidth(125E3);
+    LoRa.setTxPower(12, PA_OUTPUT_PA_BOOST_PIN);
+    // bandwidth: https://unsigned.io/understanding-lora-parameters/
+    LoRa.setSignalBandwidth(500E3);
+    LoRa.setSpreadingFactor(7);
     LoRa.setCodingRate4(7);
     LoRa.enableCrc();
     //Serial.println("LoRa init succeeded.");
@@ -31,26 +31,24 @@ void RadioClass::begin() {
 
 void RadioClass::_readPacket() {
     uint8_t* pkg_ptr = (uint8_t*)&_incomming;
-
     int packetsize = LoRa.parsePacket();
 
     if (packetsize == sizeof(RadioPacket)) {
         for (uint8_t i=0;i<sizeof(RadioPacket);i++) {
             *pkg_ptr++ = (uint8_t)LoRa.read();
         }
-        _lowpass_signal = LoRa.packetSnr() * SIGNAL_LOWPASS + _lowpass_signal * (1 - SIGNAL_LOWPASS);
+        _lowpass_signal = min(LoRa.packetSnr(), _incomming.signal) * SIGNAL_LOWPASS + _lowpass_signal * (1 - SIGNAL_LOWPASS);
         _outgoing.signal = LoRa.packetSnr();
         _incomming_timestamp = millis();
-        _incomming_valid = true;
-    }
-    else if (packetsize != 0) {
-        _incomming_valid = false;
+        _incomming_updated = true;
+    } else {
+        _incomming_updated = false;
     }
 }
 
 bool RadioClass::isValid() {
     unsigned long now = millis();
-    return (now -_incomming_timestamp < RF_TIMEOUT);// && _incomming_valid);
+    return (now -_incomming_timestamp < RF_EXPIRES);// && _incomming_updated);
 }
 
 void RadioClass::_writePacket() {
@@ -61,16 +59,18 @@ void RadioClass::_writePacket() {
     _outgoing.msg_id++;
 }
 
-bool RadioClass::recieve() {
-    _readPacket();
-    return _incomming_valid;
+bool RadioClass::recieve(unsigned long timeout) {
+    unsigned long timeout_start = millis();
+    do {
+        _readPacket();
+    } while (_incomming_updated == false && millis() - timeout_start <= timeout);
+
+    return _incomming_updated;
 };
 
-bool RadioClass::transmit() {
+bool RadioClass::transmit(bool force) {
     unsigned long now = millis();
-    if (now - _outgoing_timestamp < RF_MIN_INTERVAL)
-        return false;
-    else if (_changed || now - _outgoing_timestamp >= RF_MAX_INTERVAL) {
+    if (now - _outgoing_timestamp >= RF_INTERVAL || force || _changed) {
         _writePacket();
         _changed = false;
         _outgoing_timestamp = now;
@@ -113,12 +113,16 @@ float RadioClass::getDepth() {
 }
 
 float RadioClass::getSignal() {
-    return isValid() ? LoRa.packetRssi() : NAN;
+    return isValid() ? _lowpass_signal : NAN;
 }
 
 float RadioClass::getSNR() {
-    float ratio = (_lowpass_signal - _sig_min) / (_sig_max - _sig_min);
-    return constrain(ratio,0.0,1.0);
+    if (isValid()) {
+        float ratio = (_lowpass_signal - SIGNAL_MIN) / (SIGNAL_MAX - SIGNAL_MIN);
+        return constrain(ratio,0.0,1.0);
+    } else {
+        return NAN;
+    }
 }
 
 RadioClass radio;

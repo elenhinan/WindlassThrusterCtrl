@@ -5,7 +5,9 @@ U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI display(U8G2_R0, PIN_OLED_CS, PIN_OLED_DC,
 void setup() {
   delay(2000);
 
-  //Serial.begin(9600);
+#ifdef DEBUG
+  Serial.begin(115200);
+#endif
 
   // setup display
   if(!display.begin()) {
@@ -23,7 +25,6 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 
   // init radio
-  radio.setSignalRange(SIGNAL_MIN, SIGNAL_MAX);
   radio.begin();
 
   interface.setPins(PIN_BTN_LEFT, PIN_BTN_RIGHT, PIN_BTN_UP, PIN_BTN_DOWN, PIN_BTN_OK);
@@ -36,21 +37,30 @@ void setup() {
 }
 
 void loop() {
-
-  // make button commands interrupt driven on timer
-  unsigned long now = millis();
+  // update hw inputs
   battery.update();
   interface.update();
-  bool rx = radio.recieve();
-  radio.transmit();
+
+  // transmit if rf_interval reached, then wait for reply
+  unsigned long zero_time = millis();
+  if (radio.transmit()) {
+    unsigned long tx_time = millis();
+    radio.recieve(RF_TIMEOUT);
+    unsigned long rx_time = millis();
+    interface.display(true);
+#ifdef DEBUG
+    Serial.print("tx: ");
+    Serial.print(tx_time-zero_time);
+    Serial.print("\t rx: ");
+    Serial.println(rx_time-tx_time);
+#endif
+  }
+
+  // display
+  interface.display();
 
   if (interface.getIdle() > AUTO_OFF) {
     sleep();
-  }
-
-  if (rx || now - last_refresh > MIN_REFRESH_INTERVAL) {
-    interface.display();
-    last_refresh = now;
   }
 }
 

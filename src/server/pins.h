@@ -11,8 +11,8 @@
 #define THR_PIN_PORT_IN         A5
 #define WL_PIN_UP_IN            6
 #define WL_PIN_DOWN_IN          5
-#define WL_PIN_CHAIN_A          11
-#define WL_PIN_CHAIN_B          10
+#define WL_PIN_CHAIN_A          10
+#define WL_PIN_CHAIN_B          11
 
 // power
 #define PIN_BAT_V               9

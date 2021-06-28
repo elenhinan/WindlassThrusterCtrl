@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-#define DEBUG
+//#define DEBUG
 
 // BSFrance 2017 contact@bsrance.fr 
 // LoR32u4II 868MHz or 915MHz (black board)
@@ -11,13 +11,13 @@
 #define LORA_BAND    868E6
 #define LORA_PABOOST false 
 
-// remote
-#define SIGNAL_MIN  -10
-#define SIGNAL_MAX  10
+// radio communications
+#define SIGNAL_MIN  0
+#define SIGNAL_MAX  5
 #define SIGNAL_LOWPASS 0.25
-#define RF_MIN_INTERVAL 200
-#define RF_MAX_INTERVAL 500
-#define RF_TIMEOUT (2.5 * RF_MAX_INTERVAL)
+#define RF_INTERVAL 100
+#define RF_EXPIRES 250
+#define RF_TIMEOUT 50
 
 // battery
 #define BATTERY_VMAX 4.2

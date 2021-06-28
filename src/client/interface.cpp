@@ -10,6 +10,7 @@ InterfaceClass::InterfaceClass() :
     _buttons_prev(0),
     _buttons_time(0),
     _display(0),
+	_last_refresh(0),
     _last_btn_timestamp(0),
 	_state(THRUSTER)
 {
@@ -64,10 +65,12 @@ void InterfaceClass::update() {
 	_updateState();
 }
 
-bool InterfaceClass::_checkBtn(uint8_t btn_combo, long unsigned time) {
+bool InterfaceClass::_checkBtn(uint8_t btn_combo, long unsigned time, bool hold) {
 	unsigned long now = millis();
 	if ((btn_combo == _buttons) && (now - _buttons_time > time)) {
-		_buttons_time = now; // reset timer if button registered
+		if (!hold) {
+			_buttons_time = now; // reset timer if button registered
+		}
 		return true;
 	} else {
 		return false;
@@ -94,16 +97,16 @@ void InterfaceClass::_updateState() {
 			break;
 		case THRUSTER:
 			if (_checkBtn(BTN_OK, BUTTON_LONGPRESS)) _state = WINDLASS;
-			else if (_checkBtn(BTN_RIGHT, BUTTON_SHORTPRESS)) radio.setThruster(DIR_POS);
-			else if (_checkBtn(BTN_LEFT, BUTTON_SHORTPRESS)) radio.setThruster(DIR_NEG);
+			else if (_checkBtn(BTN_RIGHT, BUTTON_SHORTPRESS, true)) radio.setThruster(DIR_POS);
+			else if (_checkBtn(BTN_LEFT, BUTTON_SHORTPRESS, true)) radio.setThruster(DIR_NEG);
 			else radio.setThruster(DIR_STOP);
 			break;
 		case WINDLASS:
 			if (_checkBtn(BTN_OK, BUTTON_LONGPRESS)) _state = STATUS;
-			else if (_checkBtn(BTN_UP, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_POS);
-			else if (_checkBtn(BTN_DOWN, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_NEG);
-			else if (_checkBtn(BTN_UP | BTN_OK, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_FORCE_POS);
-			else if (_checkBtn(BTN_DOWN | BTN_OK, BUTTON_SHORTPRESS)) radio.setWindlass(DIR_FORCE_NEG);
+			else if (_checkBtn(BTN_UP, BUTTON_SHORTPRESS, true)) radio.setWindlass(DIR_POS);
+			else if (_checkBtn(BTN_DOWN, BUTTON_SHORTPRESS, true)) radio.setWindlass(DIR_NEG);
+			else if (_checkBtn(BTN_UP | BTN_OK, BUTTON_SHORTPRESS, true)) radio.setWindlass(DIR_FORCE_POS);
+			else if (_checkBtn(BTN_DOWN | BTN_OK, BUTTON_SHORTPRESS, true)) radio.setWindlass(DIR_FORCE_NEG);
 			else radio.setWindlass(DIR_STOP);
 			break;
 //		case WINDLASS_CALIBRATE:
@@ -116,13 +119,18 @@ void InterfaceClass::_updateState() {
 	}
 }
 
-void InterfaceClass::display() {
-	switch(_state) {
-		case STATUS: _dispStatus(); break;
-		case THRUSTER: _dispThruster(); break;
-		case WINDLASS: _dispWindlass(); break;
-		case WINDLASS_CALIBRATE: _dispWindlassCalibrate(); break;
-		default: break;
+void InterfaceClass::display(bool force) {
+	unsigned long now = millis();
+  	if (now - _last_refresh > REFRESH_INTERVAL || force) {
+		_last_refresh = now;
+
+		switch(_state) {
+			case STATUS: _dispStatus(); break;
+			case THRUSTER: _dispThruster(); break;
+			case WINDLASS: _dispWindlass(); break;
+			case WINDLASS_CALIBRATE: _dispWindlassCalibrate(); break;
+			default: break;
+		}
 	}
 }
 
@@ -197,8 +205,13 @@ void InterfaceClass::_drawSignal() {
 	const uint8_t bar_x = x + antenna_width + 2;
 	const uint8_t n_bars = 4;
 
-	uint8_t bar = constrain(radio.getSNR() * n_bars+1,0,n_bars);
+	float snr = radio.getSNR();
+	
+	if (snr == NAN) // do not draw antenna if no signal
+		return;
 
+	// else draw bars
+	uint8_t bar = constrain(snr * n_bars+1,0,n_bars);
 	_display->drawXBMP(x, y, antenna_width, antenna_height, antenna_bits);
 	for (uint8_t i=0; i<bar; i++) {
 		uint8_t bar_h = (i+1)*2;

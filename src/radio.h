@@ -17,20 +17,18 @@ class RadioClass {
         RadioPacket _incomming;
         RadioPacket _outgoing;
         bool _changed;
-        bool _incomming_valid;
+        bool _incomming_updated;
         unsigned long _incomming_timestamp;
         unsigned long _outgoing_timestamp;
         int _msg_id;
-        float _sig_min;
-        float _sig_max;
         float _lowpass_signal;
         void _readPacket();
         void _writePacket();
     public:
         RadioClass();
         void begin();
-        bool recieve();
-        bool transmit();
+        bool recieve(unsigned long timeout=0);
+        bool transmit(bool force=false);
         bool isValid();
         void setThruster(Move state);
         Move getThruster();
@@ -39,7 +37,6 @@ class RadioClass {
         void setDepth(float depth);
         float getDepth();
         float getSignal();
-        void setSignalRange(float sigmin, float sigmax) { _sig_min = sigmin; _sig_max = sigmax; }
         float getSNR();
 };
 
