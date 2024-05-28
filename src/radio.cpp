@@ -26,17 +26,15 @@ void RadioClass::begin() {
     LoRa.setSpreadingFactor(7);
     LoRa.setCodingRate4(7);
     LoRa.enableCrc();
+    #ifdef DEBUG
+    LoRa.onTxDone(_onTxDone);
+    #endif
     //Serial.println("LoRa init succeeded.");
 }
 
 void RadioClass::_readPacket() {
-    uint8_t* pkg_ptr = (uint8_t*)&_incomming;
-    int packetsize = LoRa.parsePacket();
-
-    if (packetsize == sizeof(RadioPacket)) {
-        for (uint8_t i=0;i<sizeof(RadioPacket);i++) {
-            *pkg_ptr++ = (uint8_t)LoRa.read();
-        }
+    if (LoRa.parsePacket() == sizeof(RadioPacket)) {
+        LoRa.readBytes((uint8_t*)&_incomming, sizeof(RadioPacket));
         _lowpass_signal = min(LoRa.packetSnr(), _incomming.signal) * SIGNAL_LOWPASS + _lowpass_signal * (1 - SIGNAL_LOWPASS);
         _outgoing.signal = LoRa.packetSnr();
         _incomming_timestamp = millis();
@@ -52,12 +50,18 @@ bool RadioClass::isValid() {
 }
 
 void RadioClass::_writePacket() {
-    uint8_t* pkg_ptr = (uint8_t*)&_outgoing;
     LoRa.beginPacket();
-    LoRa.write(pkg_ptr, sizeof(RadioPacket));
+    LoRa.write((uint8_t*)&_outgoing, sizeof(RadioPacket));
     LoRa.endPacket(true); // true = non blocking mode
     _outgoing.msg_id++;
 }
+
+#ifdef DEBUG
+void _onTxDone() {
+    Serial.print(millis());
+    Serial.println(": TX done");
+}
+#endif
 
 bool RadioClass::recieve(unsigned long timeout) {
     unsigned long timeout_start = millis();

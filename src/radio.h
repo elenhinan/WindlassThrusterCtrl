@@ -40,4 +40,8 @@ class RadioClass {
         float getSNR();
 };
 
+#ifdef DEBUG
+void _onTxDone();
+#endif
+
 extern RadioClass radio;
