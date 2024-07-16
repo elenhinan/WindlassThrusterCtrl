@@ -5,3 +5,4 @@
 .vscode/ipch
 lib/*
 !lib/README
+src/arduino_secrets.h

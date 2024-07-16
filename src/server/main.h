@@ -7,6 +7,7 @@
 #include "thruster.h"
 #include "windlass.h"
 #include "radio.h"
+#include "webserver.h"
 
 unsigned long last_update = 0;            // last update time
 

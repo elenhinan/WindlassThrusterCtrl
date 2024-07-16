@@ -11,14 +11,6 @@
 #define LORA_BAND    868E6
 #define LORA_PABOOST false 
 
-// radio communications
-#define SIGNAL_MIN  0
-#define SIGNAL_MAX  5
-#define SIGNAL_LOWPASS 0.25
-#define RF_INTERVAL 100
-#define RF_EXPIRES 250
-#define RF_TIMEOUT 50
-
 // battery
 #define BATTERY_VMAX 4.2
 #define BATTERY_VMIN 3.3
@@ -28,6 +20,20 @@
 #define LORA_BOAT_ID            0x14
 #define LORA_CLIENT_ADR         0x55
 #define LORA_SERVER_ADR         0xFF
+
+// remote timers
+#define REMOTE_EXPIRES  250
+#define REMOTE_INTERVAL 100
+
+// esp webserver
+#define ESP_BAUDRATE 250000
+#define ESP_SERIAL Serial1
+
+// radio communications
+#define SIGNAL_MIN  0
+#define SIGNAL_MAX  5
+#define SIGNAL_LOWPASS 0.25
+#define RF_TIMEOUT 50
 
 // commands
 enum Move : int8_t
@@ -46,3 +52,13 @@ enum Move : int8_t
     ERROR_LIMIT = 34,       // motor at limit
     UNKNOWN = 64            // value unknown
 };
+
+// Data packet
+typedef struct {
+    uint8_t sender;
+    uint16_t msg_id;
+    float signal;
+    float depth;
+    Move thruster;
+    Move windlass;
+} RemotePacket;

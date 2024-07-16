@@ -37,6 +37,9 @@ void setup() {
   // setup radio control
   radio.begin();
 
+  // setup webserver control
+  webserver.begin();
+
   // done
   digitalWrite(LED_BUILTIN, LOW);
 }
@@ -50,15 +53,13 @@ void loop() {
   } else {
     digitalWrite(LED_BUILTIN, LOW);
   }
-
+  webserver.recieve();
   // update outputs
   if (now - last_update > HW_INTERVAL) {
 
     // if any radio commands recieved, pass them on
-    //if (wifi.recieve()) {
-    //  thruster.input(wifi.getThruster());
-    //  windlass.input(wifi.getWindlass());
-    //}
+    thruster.input(webserver.getThruster());
+    windlass.input(webserver.getWindlass());
     thruster.input(radio.getThruster());
     windlass.input(radio.getWindlass());
 
@@ -69,6 +70,9 @@ void loop() {
     radio.setThruster(thruster.getState());
     radio.setWindlass(windlass.getState());
     radio.setDepth(windlass.getChain());
+    webserver.setThruster(thruster.getState());
+    webserver.setWindlass(windlass.getState());
+    webserver.setDepth(windlass.getChain());
 
     last_update = now;            // timestamp the message
   }
@@ -77,4 +81,5 @@ void loop() {
   if (rx) {
     radio.transmit(true);
   }
+  webserver.transmit();
 }
