@@ -1,4 +1,5 @@
 #pragma once
+#include <INA219.h>
 #include "motor.h"
 
 class Windlass : public Motor{
@@ -9,6 +10,8 @@ class Windlass : public Motor{
         int16_t _chain_counter_max;
         float _chain_length;
         float _meter_per_pulse;
+        float _current;
+        float _voltage;
         bool _chain_encA_prev;
         bool _chain_encB_prev;
         bool _force_move;

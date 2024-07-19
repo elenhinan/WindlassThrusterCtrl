@@ -7,7 +7,7 @@
 #include "pins.h"
 #include "config.h"
 #include "common.h"
-#include "radio.h"
+#include "lora32u4/radio.h"
 #include "interface.h"
 #include "battery.h"
 

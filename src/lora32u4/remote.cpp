@@ -20,8 +20,9 @@ bool RemoteClass::isValid() {
     if (now -_incomming_timestamp < REMOTE_EXPIRES)
         return true;
     else
-        _valid = false;
+        return _valid = false;
 }
+
 bool RemoteClass::transmit(bool force) {
     unsigned long now = millis();
     if (now - _outgoing_timestamp >= REMOTE_INTERVAL || force || _changed) {

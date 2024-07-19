@@ -35,6 +35,10 @@
 #define SIGNAL_LOWPASS 0.25
 #define RF_TIMEOUT 50
 
+// shunt
+#define SHUNT_A  150
+#define SHUNT_mV 75
+
 // commands
 enum Move : int8_t
 {
@@ -47,6 +51,7 @@ enum Move : int8_t
     SET_DEPTH = 9,          // set depth of anchor, calculate new link_length factor
     SET_ZERO = 10,          // set anchor zero
     SET_MAX = 11,           // set anchor max
+    SET_COOLDOWN = 12,      // set direction change cooldown
     ERROR_DISABLED = 32,    // motor is disabled
     ERROR_COOL = 33,        // motor is in cooldown
     ERROR_LIMIT = 34,       // motor at limit
@@ -54,11 +59,13 @@ enum Move : int8_t
 };
 
 // Data packet
-typedef struct {
+typedef struct __attribute((__packed__)) {
     uint8_t sender;
     uint16_t msg_id;
     float signal;
     float depth;
+    //float current;
+    //float voltage;
     Move thruster;
     Move windlass;
 } RemotePacket;

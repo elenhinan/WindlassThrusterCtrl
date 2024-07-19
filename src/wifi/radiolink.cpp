@@ -17,18 +17,23 @@ void LinkClass::begin() {
 void LinkClass::_readPacket(const uint8_t* buffer, size_t size) {
     if (size == sizeof(RemotePacket)) {
         memcpy(&_incomming, buffer, size);
-        unsigned long timestamp = millis();
+        _incomming_timestamp = millis();
+        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     }
-    lastsize = size;
-    analogWrite(LED_BUILTIN, ledpower--);
+
+    //char hex[3];
+    //for (int i = 0; i < size; i++) {
+    //    sprintf(hex, "%02x", buffer[i]);
+    //    doc["data"][i]=hex;
+    //}
 }
 
 void LinkClass::_toJson() {
     doc["windlass"] = _incomming.windlass;
     doc["thruster"] = _incomming.thruster;
     doc["depth"] = _incomming.depth;
-    doc["size_packet"] = lastsize;
-    doc["size_remote"] = sizeof(RemotePacket);
+    doc["age"] = millis() - _incomming_timestamp;
+
 }
 
 void LinkClass::getJson(String &buffer) {

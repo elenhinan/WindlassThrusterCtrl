@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <PacketSerial.h>
 #include "common.h"
-#include "remote.h"
+#include "lora32u4/remote.h"
 
 class WebServerClass : public RemoteClass {
     private:

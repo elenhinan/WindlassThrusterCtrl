@@ -8,6 +8,7 @@ class LinkClass {
     private:
         RemotePacket _incomming;
         RemotePacket _outgoing;
+        unsigned long _incomming_timestamp;
         void _readPacket(const uint8_t* buffer, size_t size);
         void _writePacket();
         void _toJson();

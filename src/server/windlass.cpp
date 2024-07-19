@@ -1,5 +1,7 @@
 #include "windlass.h"
 
+INA219 INA(0x40);
+
 Windlass::Windlass(const char* name, uint8_t pin_up_out, uint8_t pin_down_out, uint8_t pin_up_in, uint8_t pin_down_in, uint8_t pin_chain_encA, uint8_t pin_chain_encB) :
     Motor(name, pin_up_out, pin_down_out, pin_up_in, pin_down_in),
     _pin_chain_encA(pin_chain_encA),
@@ -8,6 +10,8 @@ Windlass::Windlass(const char* name, uint8_t pin_up_out, uint8_t pin_down_out, u
     _chain_counter_max(0),
     _chain_length(50),
     _meter_per_pulse(0.5),
+    _current(NAN),
+    _voltage(NAN),
     _force_move(false),
     _quadrature(false)
 {
@@ -21,6 +25,15 @@ bool Windlass::begin() {
 
     _chain_encA_prev = !digitalRead(_pin_chain_encA);
     _chain_encB_prev = !digitalRead(_pin_chain_encB);
+
+    Wire.begin();
+    if (INA.begin()) {
+        INA.setBusVoltageRange(16);
+        INA.setMaxCurrentShunt(SHUNT_A, SHUNT_mV/SHUNT_A);
+        INA.setGain(2);
+        INA.setShuntSamples(4); // 2^4=16 samples ~8.5 ms conversion time
+        INA.setBusSamples(4);
+    }
 
     return true;
 }
@@ -99,5 +112,9 @@ void Windlass::_output(Move direction) {
 
 void Windlass::update() {
     _decodeCounter();
+    if (INA.isConnected()) {
+        _current = INA.getCurrent();
+        _voltage = INA.getBusVoltage();
+    }
     Motor::update();
 }
